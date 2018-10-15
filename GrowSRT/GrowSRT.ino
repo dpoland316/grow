@@ -7,25 +7,11 @@
 #include "C8y_MQTT.h"
 #include "FS.h"
 
-// Define Wifi/Server credentials
-const char* ssid = "Sapphire";
-const char* password =  "0102030405";
+// 	Login Cerds
+// -------------------
+#include "logins.h"
+// --------------------
 
-// MQTT credentials
-//const String mqttServer = "m20.cloudmqtt.com";
-//const int 	mqttPort = 14273;
-//const char* mqttUser = "qzznwlks";
-//const char* mqttPassword = "bBw0jh6X3SPR";
-//const char* temp_Q = "grow/Temperature";
-//const char* humidity_Q = "grow/Humidity";
-//const char* light_Q = "grow/Light";
-
-const String mqttServer = "gcsplarc.cumulocity.com";
-const int 	mqttPort = 1883;
-//const char* mqttUser = "gcsplarc/techUser";
-//const char* mqttPassword = "techUser123";
-const char* mqttUser = "gcsplarc/david.poland@softwareag.com";
-const char* mqttPassword = "2wsx3edc!";
 
 const String mqttDeviceID = "1A2S3DFCX5432";
 
