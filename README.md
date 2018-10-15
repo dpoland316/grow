@@ -1,2 +1,2 @@
 # grow
-repo for my IoT chili plant monitoring device
+Repo for my IoT chili plant monitoring device!
