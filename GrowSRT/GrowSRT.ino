@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "string.h"
-#include "ProcessScheduler.h"
 #include "DHT.h"
 #include "ESP8266WiFi.h"
 #include "PubSubClient.h"
 #include "C8y_MQTT.h"
 #include "FS.h"
+#include "SensorThreads.h"
 
-// 	Login Cerds
+// 	Login Creds
 // -------------------
 #include "logins.h"
 // --------------------
@@ -15,15 +15,9 @@
 
 const String mqttDeviceID = "1A2S3DFCX5432";
 
-const char* temp_Q = "grow/Temperature";
-const char* humidity_Q = "grow/Humidity";
-const char* light_Q = "grow/Light";
-
-
 boolean testTheFS=true;
 
-
-// Wifi/MQTT/Cumulocity Clients
+// Wifi / MQTT / Cumulocity Clients
 WiFiClient espClient;
 PubSubClient client(espClient);
 C8y_MQTT C8YClient(client);
@@ -40,80 +34,40 @@ C8y_MQTT C8YClient(client);
 DHT dht(DHTPIN, DHTTYPE);
 
 // Define Async Processes
-class BlinkProcess: public Process {
-public:
-	// Call the Process constructor
-	BlinkProcess(Scheduler &manager, ProcPriority pr, unsigned int period,
-			int pin) :
-			Process(manager, pr, period) {
-		_pinState = LOW; // Set the default state
-		_pin = pin; // Store the pin number
-	}
 
-protected:
-	//setup the pins
-	virtual void setup() {
-		pinMode(_pin, OUTPUT);
-		_pinState = LOW;
-		digitalWrite(_pin, _pinState);
-	}
-
-	//LEDs should be off when disabled
-	virtual void onDisable() {
-		_pinState = LOW;
-		digitalWrite(_pin, _pinState);
-	}
-
-	//Start the LEDs on
-	virtual void onEnable() {
-		_pinState = HIGH;
-		digitalWrite(_pin, _pinState);
-	}
-
-	// Create our service routine
-	virtual void service() {
-		// If pin is on turn it off, otherwise turn it on
-		_pinState = !_pinState;
-		digitalWrite(_pin, _pinState);
-	}
-
-private:
-	bool _pinState; //the Current state of the pin
-	int _pin; // The pin the LED is on
-};
-class TempAndHumidityProcess: public Process {
-public:
-	// Call the Process constructor
-	TempAndHumidityProcess(Scheduler &manager, ProcPriority pr,
-			unsigned int period) :
-			Process(manager, pr, period) {
-	}
-
-protected:
-	virtual void service() {
-		//delay(2000);
-
-		humidity = dht.readHumidity();
-		temperature = dht.readTemperature();
-
-		//Print temp and humidity values to serial monitor
-		Serial.print("Humidity: ");
-		Serial.print(humidity);
-		Serial.print(" %, Temp: ");
-		Serial.print(temperature);
-		Serial.println(" Celsius");
-
-		String tempMsgString = "c8y_TemperatureSensor,T," + String(temperature, 2) + ",C";
-		String humidityString = "c8y_HumiditySensor,h," + String(humidity, 2) + ",%RH";
-
-		C8YClient.publish(200, tempMsgString); flash();
-		C8YClient.publish(200, humidityString); flash();
-	}
-
-private:
-	float humidity;
-	float temperature;
-};
+//class TempAndHumidityProcess: public Process {
+//public:
+//	// Call the Process constructor
+//	TempAndHumidityProcess(Scheduler &manager, ProcPriority pr,
+//			unsigned int period) :
+//			Process(manager, pr, period) {
+//	}
+//
+//protected:
+//	virtual void service() {
+//		//delay(2000);
+//
+//		humidity = dht.readHumidity();
+//		temperature = dht.readTemperature();
+//
+//		//Print temp and humidity values to serial monitor
+//		Serial.print("Humidity: ");
+//		Serial.print(humidity);
+//		Serial.print(" %, Temp: ");
+//		Serial.print(temperature);
+//		Serial.println(" Celsius");
+//
+//		String tempMsgString = "c8y_TemperatureSensor,T," + String(temperature, 2) + ",C";
+//		String humidityString = "c8y_HumiditySensor,h," + String(humidity, 2) + ",%RH";
+//
+//		C8YClient.publish(200, tempMsgString); flash();
+//		C8YClient.publish(200, humidityString); flash();
+//	}
+//
+//private:
+//	float humidity;
+//	float temperature;
+//};
 class LightProcess: public Process {
 public:
 	// Call the Process constructor
@@ -169,14 +123,9 @@ private:
 
 Scheduler sched; // Create a global Scheduler object
 
-// Create our blink processes
-//BlinkProcess blink1(sched, HIGH_PRIORITY, random(50,1000), YELLOW); // Blink every 250 ms
-//BlinkProcess blink2(sched, HIGH_PRIORITY, random(50,1000), BLUE); // Blink every 500 ms
-//BlinkProcess blink3(sched, HIGH_PRIORITY, random(50,1000), GREEN); // Blink every 1000 ms
-TempAndHumidityProcess readTemp(sched, HIGH_PRIORITY, 2000);
+// Create Async threads
+TempAndHumidityProcess readTemp(sched, HIGH_PRIORITY, 2000, dht);
 LightProcess readLight(sched, HIGH_PRIORITY, 1000, LDR);
-
-
 
 void setup()
 {
