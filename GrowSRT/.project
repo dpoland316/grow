@@ -57,11 +57,6 @@
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WiFi</locationURI>
 		</link>
 		<link>
-			<name>libraries/ProcessScheduler</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/ProcessScheduler/1.0.0</locationURI>
-		</link>
-		<link>
 			<name>libraries/PubSubClient</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/PubSubClient/2.6.0</locationURI>
@@ -70,6 +65,11 @@
 			<name>libraries/RingBuf</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/RingBuf/2.0.0</locationURI>
+		</link>
+		<link>
+			<name>libraries/TaskScheduler</name>
+			<type>2</type>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/TaskScheduler/2.6.1</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
