@@ -64,6 +64,21 @@ boolean C8y_MQTT::init(String deviceId) {
 
 }
 
+boolean C8y_MQTT::sendTemp(float temp) {
+	String tempMsgString = "c8y_TemperatureSensor,T," + String(temp, 2) + ",C";
+	publish(200, tempMsgString);
+}
+
+boolean C8y_MQTT::sendHumidity(float hum) {
+	String humidityString = "c8y_HumiditySensor,h," + String(hum, 2) + ",%RH";
+	publish(200, humidityString);
+}
+
+boolean C8y_MQTT::sendLight(int lux) {
+	String lightString = "c8y_LightSensor,e," + String(lux) + ",lux";
+	publish(200, lightString);
+}
+
 boolean C8y_MQTT::registerSubscriptions(){
 	boolean rTopic = false;
 	boolean eTopic = false;

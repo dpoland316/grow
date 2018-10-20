@@ -11,13 +11,20 @@
 
 const String mqttDeviceID = "1A2S3DFCX5432";
 
-// Define pins
+// Define LED pins
 #define YELLOW 	12
 #define BLUE 	5
 #define GREEN 	14
-#define LDR 	0 		// A0 Light Dependant Resistor
+
+// Define Sensor Pins
+#define LDR 	0 		// A0 Light Sensor (Light Dependent Resistor)
 #define DHTPIN 	13		// Temp and Humidity
 #define DHTTYPE	DHT22
+#define SOIL	N/A
 
+// Define indicators
+const int MONITORPIN	=YELLOW;
+const int WIFIPIN		=BLUE;
+const int MQTTPIN		=GREEN;
 
 #endif /* GROWCONFIG_H_ */

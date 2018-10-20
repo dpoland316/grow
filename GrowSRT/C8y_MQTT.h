@@ -28,6 +28,10 @@ public:
 	boolean publish(int c8yTemplate, String payload);
 	boolean callback(const char* topic, byte* payload, unsigned int length);
 
+	boolean sendTemp(float temp);
+	boolean sendHumidity(float hum);
+	boolean sendLight(int lux);
+
 	C8y_MQTT& setClient(PubSubClient& client);
 private:
 	PubSubClient* _client;

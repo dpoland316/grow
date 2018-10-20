@@ -5,7 +5,7 @@
 #include "PubSubClient.h"
 #include "C8y_MQTT.h"
 #include "FS.h"
-#include "SensorThreads.h"
+#include "Sensors.h"
 #include "TaskScheduler.h"
 
 
@@ -101,19 +101,39 @@ void initMQTT(){
 }
 
 // Instantiate the sensors
-TempAndHumiditySensor tempAndHumSensor(DHTPIN, DHTTYPE, C8YClient, YELLOW);
-LightSensor lightSensor (LDR, C8YClient, YELLOW);
+//TempAndHumiditySensor tempAndHumSensor(DHTPIN, DHTTYPE, C8YClient, YELLOW);
+//LightSensor lightSensor (LDR, C8YClient, YELLOW);
 
+
+void flash(){
+	// flash the pin to show activity
+	digitalWrite(MONITORPIN, LOW);
+	digitalWrite(MONITORPIN, HIGH);
+	delay(100);
+	digitalWrite(MONITORPIN, LOW);
+}
 
 // Define callback method prototypes
-void tempHumCallback() 	{  tempAndHumSensor.querySensor();  	}
-void lightCallback() 	{  lightSensor.querySensor();			}
+void tempHumCallback() 	{
+	float temp, hum;
+	std::tie(temp, hum) = TempAndHumiditySensor::querySensor();
+
+	C8YClient.sendTemp(temp);
+	flash(); 	// sent temp
+
+	C8YClient.sendHumidity(hum);
+	flash(); 	//sent humidity
+}
+void lightCallback() 	{
+	C8YClient.sendLight(LightSensor::querySensor());
+	flash();	// sent lux
+}
 void mqttCallback(const char* topic, byte* payload, unsigned int length)
 						{ 	C8YClient.callback(topic, payload, length);  }
 
 //Tasks
-Task tempHumTask(2000, TASK_FOREVER, &tempHumCallback);
-Task lightTask(1000, TASK_FOREVER, &lightCallback);
+Task TempAndHumidityTask(2000, TASK_FOREVER, &tempHumCallback);
+Task LightTask(1000, TASK_FOREVER, &lightCallback);
 
 Scheduler scheud;
 
@@ -138,25 +158,46 @@ void setup()
 	initMQTT();
 
 	// Prepare sensors
-	tempAndHumSensor.setup();
-	lightSensor.setup();
+	TempAndHumiditySensor::sensorSetup();
+	LightSensor::sensorSetup();
 
 	// Initialize scheduler and sensor tasks
 	scheud.init();
-	scheud.addTask(tempHumTask);
-	scheud.addTask(lightTask);
-
-	scheud.startNow();  // set point-in-time for scheduling start
+	scheud.addTask(TempAndHumidityTask);
+	scheud.addTask(LightTask);
+	TempAndHumidityTask.enable();
+	LightTask.enable();
 
 }
 
 
 void loop()
 {
+	client.loop(); 		// MQTT monitor
+	scheud.execute();	// Sensor loop
 
-client.loop(); 		// MQTT monitor
-scheud.execute();	// Sensor loop
+	/*****************************************************************
+	 *
+	 * Keep indicator pins updated with current connection status
+	 * WiFi will automatically reconnect, MQTT needs to be manually
+	 * retriggered.
+	 *
+	 *****************************************************************/
 
+	if (!WiFi.isConnected()){
+		digitalWrite(WIFIPIN, LOW);
+	} else {
+		digitalWrite(WIFIPIN, HIGH);
+	}
+
+	if (!client.connected()){
+		digitalWrite(MQTTPIN, LOW);
+		if (WiFi.isConnected()){
+			initMQTT();
+		}
+	} else {
+		digitalWrite(MQTTPIN, HIGH);
+	}
 }
 
 
