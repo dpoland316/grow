@@ -2,6 +2,7 @@
 #include "string.h"
 #include "DHT.h"
 #include "ESP8266WiFi.h"
+#include "time.h"
 #include "PubSubClient.h"
 #include "C8y_MQTT.h"
 #include "FS.h"
@@ -18,16 +19,47 @@
 #include "growConfig.h"
 
 
-
-
-
-
 // Wifi / MQTT / Cumulocity Clients
 WiFiClient espClient;
 PubSubClient client(espClient);
 C8y_MQTT C8YClient(client);
 
 
+void signalLEDCallback(mc_color color){
+Serial.print("Callback executed, color: "); Serial.println(color);
+	switch (color) {
+		case red:
+			digitalWrite(MC_RED, HIGH);
+			digitalWrite(MC_BLUE, LOW);
+			digitalWrite(MC_GREEN, LOW);
+			break;
+		case green:
+			digitalWrite(MC_RED, LOW);
+			digitalWrite(MC_BLUE, LOW);
+			digitalWrite(MC_GREEN, HIGH);
+			break;
+		case blue:
+			digitalWrite(MC_RED, LOW);
+			digitalWrite(MC_BLUE, HIGH);
+			digitalWrite(MC_GREEN, LOW);
+			break;
+		case yellow:
+			digitalWrite(MC_RED, HIGH);
+			digitalWrite(MC_BLUE, LOW);
+			digitalWrite(MC_GREEN, HIGH);
+			break;
+		case purple:
+			digitalWrite(MC_RED, HIGH);
+			digitalWrite(MC_BLUE, HIGH);
+			digitalWrite(MC_GREEN, LOW);
+			break;
+		case aqua:
+			digitalWrite(MC_RED, LOW);
+			digitalWrite(MC_BLUE, HIGH);
+			digitalWrite(MC_GREEN, HIGH);
+			break;
+	}
+}
 
 void initFS(){
 	if (!SPIFFS.exists("/format.lck")) { // fs not formatlck already
@@ -46,9 +78,16 @@ void initPins(){
 	pinMode(BLUE, OUTPUT);
 	pinMode(GREEN, OUTPUT);
 	pinMode(YELLOW,OUTPUT);
+	pinMode(MC_RED,OUTPUT);
+	pinMode(MC_BLUE,OUTPUT);
+	pinMode(MC_RED,OUTPUT);
+
 	digitalWrite(BLUE, LOW);
 	digitalWrite(GREEN, LOW);
 	digitalWrite(YELLOW, LOW);
+	digitalWrite(MC_RED,LOW);
+	digitalWrite(MC_BLUE,LOW);
+	digitalWrite(MC_RED,LOW);
 }
 
 void initWiFi(){
@@ -64,6 +103,20 @@ void initWiFi(){
 	digitalWrite(BLUE, HIGH);
 	Serial.println();
 	Serial.println("Connected to the WiFi network");
+
+//	//set date time
+//	configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+//	Serial.print("\nWaiting for time");
+//	while (!time(nullptr)) {
+//	  Serial.print(".");
+//	  delay(1000);
+//	}
+//	Serial.print("\r\nTime has been acquired from internet time service\r\nCurrent GMT: ");
+//
+//	time_t now = time(nullptr);
+//	Serial.println(ctime(&now));
+
+
 }
 
 void initMQTT(){
@@ -75,9 +128,22 @@ void initMQTT(){
 	while (!client.connected()) {
 	    Serial.println("Connecting to MQTT...");
 
-	    if (client.connect(mqttDeviceID.c_str(), mqttUser, mqttPassword )) {
+// 	Problem with the below - it core dumps the chip upon receiving an event
+
+//	    if (client.connect(growDeviceID.c_str(),
+//	    					mqttUser,
+//							mqttPassword,
+//							C8YClient.getLastWillTopic().c_str(),
+//							C8YClient.getLastWillQoS(),
+//							C8YClient.getLastWillRetainFlag(),
+//							C8YClient.getLastWillMsg().c_str()
+//		)){
+	    if (client.connect(growDeviceID.c_str(), mqttUser, mqttPassword )) {
 	      Serial.println("Connected to " + mqttServer);
 	      digitalWrite(GREEN, HIGH);
+
+	      C8YClient.setCmdCallback(&signalLEDCallback);
+
 	    } else {
 	      Serial.print("failed with state ");
 	      Serial.println(client.state());
@@ -86,7 +152,7 @@ void initMQTT(){
 	}
 
 	// Subscribe to C8Y topics
-    if (C8YClient.init(mqttDeviceID)) {
+    if (C8YClient.init(growDeviceID)) {
       Serial.println("Subscribed to C8Y topics...");
     } else {
       Serial.print("Failed to subscribe to C8Y topics...");
@@ -95,14 +161,7 @@ void initMQTT(){
     }
 
 
-	client.subscribe("esp/commands");
-	client.subscribe("esp/logger");
-	// client.publish("s/us", "Hello from ESP8266");
 }
-
-// Instantiate the sensors
-//TempAndHumiditySensor tempAndHumSensor(DHTPIN, DHTTYPE, C8YClient, YELLOW);
-//LightSensor lightSensor (LDR, C8YClient, YELLOW);
 
 
 void flash(){
@@ -113,8 +172,18 @@ void flash(){
 	digitalWrite(MONITORPIN, LOW);
 }
 
-// Define callback method prototypes
-void tempHumCallback() 	{
+
+/************************************************************
+ *
+ *  Define Schedulers, Tasks and task callbacks, so that
+ *  sensor readings can be gathered and sent asynchronously
+ *
+ ************************************************************/
+
+Scheduler scheud;
+
+
+void tempAndHumidityCallback() 	{
 	float temp, hum;
 	std::tie(temp, hum) = TempAndHumiditySensor::querySensor();
 
@@ -128,15 +197,13 @@ void lightCallback() 	{
 	C8YClient.sendLight(LightSensor::querySensor());
 	flash();	// sent lux
 }
-void mqttCallback(const char* topic, byte* payload, unsigned int length)
-						{ 	C8YClient.callback(topic, payload, length);  }
+void mqttCallback(const char* topic, byte* payload, unsigned int length){
+	C8YClient.callback(topic, payload, length);
+}
 
-//Tasks
-Task TempAndHumidityTask(2000, TASK_FOREVER, &tempHumCallback);
+// Create task definitions and specify task interval
+Task TempAndHumidityTask(2000, TASK_FOREVER, &tempAndHumidityCallback);
 Task LightTask(1000, TASK_FOREVER, &lightCallback);
-
-Scheduler scheud;
-
 
 
 void setup()
@@ -176,6 +243,7 @@ void loop()
 	client.loop(); 		// MQTT monitor
 	scheud.execute();	// Sensor loop
 
+
 	/*****************************************************************
 	 *
 	 * Keep indicator pins updated with current connection status
@@ -183,7 +251,6 @@ void loop()
 	 * retriggered.
 	 *
 	 *****************************************************************/
-
 	if (!WiFi.isConnected()){
 		digitalWrite(WIFIPIN, LOW);
 	} else {

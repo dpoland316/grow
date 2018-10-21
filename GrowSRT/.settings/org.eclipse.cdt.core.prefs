@@ -22,10 +22,10 @@ environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.CORE/op
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.CORE/value=esp8266
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_LEVEL/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_LEVEL/operation=replace
-environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_LEVEL/value=
+environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_LEVEL/value=-DDEBUG_ESP_CORE -DDEBUG_ESP_WIFI -DDEBUG_ESP_HTTP_UPDATE -DDEBUG_ESP_UPDATER -DDEBUG_ESP_OTA -DDEBUG_ESP_OOM
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_PORT/value=
+environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.DEBUG_PORT/value=-DDEBUG_ESP_PORT\=Serial1
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.1107482350/A.BUILD.EXTRA_FLAGS/value=-DESP8266
@@ -502,7 +502,7 @@ environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MAKE_LOC
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MAKE_LOCATION/value=C\:\\ThirdPartyTools\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MENU/value=CpuFrequency\=80\nDebug\=Disabled\nDebugLevel\=None____\nFlashErase\=sdk\nFlashSize\=4M3M\nLwIPVariant\=v2mss536\nUploadSpeed\=115200\nVTable\=flash
+environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.MENU/value=CpuFrequency\=80\nDebug\=Serial1\nDebugLevel\=COREWIFIHTTP_UPDATEUPDATEROTAOOM\nFlashErase\=sdk\nFlashSize\=4M3M\nLwIPVariant\=v2mss536\nUploadSpeed\=115200\nVTable\=flash
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.1107482350/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}
